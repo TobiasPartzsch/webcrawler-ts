@@ -37,11 +37,54 @@ export function getURLsFromHTML(html: string, baseURL: string): string[] {
     return urls
 }
 
-const htmlType = "text/html"
+
+export async function crawlPage(
+    baseURL: string,
+    currentURL: string = baseURL,
+    pages: Record<string, number> = {},
+) {
+    // if this is an offsite URL, bail immediately
+    const currentURLObj = new URL(currentURL);
+    const baseURLObj = new URL(baseURL);
+    if (currentURLObj.hostname !== baseURLObj.hostname) {
+        return pages;
+    }
+
+    // use a consistent URL format
+    const normalizedURL = normalizeURL(currentURL);
+
+    // if we've already visited this page
+    // just increase the count and don't repeat
+    // the http request
+    if (pages[normalizedURL] > 0) {
+        pages[normalizedURL]++;
+        return pages;
+    }
+
+    // initialize this page in the map
+    // since it doesn't exist yet
+    pages[normalizedURL] = 1;
+
+    // fetch and parse the html of the currentURL
+    console.log(`crawling ${currentURL}`);
+    let html = "";
+    try {
+        html = await getHTML(currentURL);
+    } catch (err) {
+        console.log(`${(err as Error).message}`);
+        return pages;
+    }
+
+    // recur through the page's links
+    const nextURLs = getURLsFromHTML(html, baseURL);
+    for (const nextURL of nextURLs) {
+        pages = await crawlPage(baseURL, nextURL, pages);
+    }
+
+    return pages;
+}
 
 export async function getHTML(url: string) {
-    console.log(`crawling ${url}`);
-
     let res;
     try {
         res = await fetch(url);
@@ -50,17 +93,15 @@ export async function getHTML(url: string) {
     }
 
     if (res.status > 399) {
-        console.log(`Got HTTP error: ${res.status} ${res.statusText}`);
-        return;
+        throw new Error(`Got HTTP error: ${res.status} ${res.statusText}`);
     }
 
     const contentType = res.headers.get("content-type");
     if (!contentType || !contentType.includes("text/html")) {
-        console.log(`Got non-HTML response: ${contentType}`);
-        return;
+        throw new Error(`Got non-HTML response: ${contentType}`);
     }
 
-    console.log(await res.text());
+    return res.text();
 }
 
 function isUnsafeHref(href: string): boolean {

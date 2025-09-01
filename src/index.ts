@@ -1,4 +1,4 @@
-import { getHTML } from "./crawl";
+import { crawlPage } from "./crawl";
 
 
 async function main() {
@@ -7,9 +7,10 @@ async function main() {
         console.error('Wrong number of arguments! Usage: npm run start <BASE_URL>');
         process.exit(1);
     }
-    const base = args[0].trim();
-    console.log(`Starting crawler at base URL: "${base}"`);
-    await getHTML(base);
+    const baseURL = args[0].trim();
+    console.log(`Starting crawler at base URL: "${baseURL}"`);
+    const pages = await crawlPage(baseURL);
+
     process.exit(0);
 }
 
