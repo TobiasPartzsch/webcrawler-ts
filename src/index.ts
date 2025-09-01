@@ -1,4 +1,7 @@
-function main() {
+import { getHTML } from "./crawl";
+
+
+async function main() {
     const args = process.argv.slice(2);
     if (args.length !== 1) {
         console.error('Wrong number of arguments! Usage: npm run start <BASE_URL>');
@@ -6,6 +9,7 @@ function main() {
     }
     const base = args[0].trim();
     console.log(`Starting crawler at base URL: "${base}"`);
+    await getHTML(base);
     process.exit(0);
 }
 
