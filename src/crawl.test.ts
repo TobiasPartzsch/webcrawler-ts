@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { normalizeURL } from "./crawl";
+import { getURLsFromHTML, normalizeURL } from "./crawl";
 
-const cases = [
+const normalizeCases = [
     {
         name: "https no trailing slash",
         input: "https://blog.boot.dev/path",
@@ -70,7 +70,141 @@ const cases = [
 ] as const;
 
 describe("normalizeURL", () => {
-    it.each(cases)("$name", ({ input, expected }) => {
+    it.each(normalizeCases)("$name", ({ input, expected }) => {
         expect(normalizeURL(input)).toBe(expected);
     });
 });
+
+const getURLCases = [
+    {
+        name: "absolute",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="https://blog.boot.dev"><span>Boot.dev></span></a></body></html>',
+        expected: ["https://blog.boot.dev/"],
+    },
+    {
+        name: "relative",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="/path/one"><span>Boot.dev</span></a></body></html>',
+        expected: ["https://blog.boot.dev/path/one"],
+    },
+    {
+        name: "both",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="/path/one"><span>Boot.dev</span></a><a href="https://other.com/path/one"><span>Boot.dev</span></a></body></html>',
+        expected: [
+            "https://blog.boot.dev/path/one",
+            "https://other.com/path/one",
+        ],
+    },
+] as const
+
+describe("getURLsFromHTML", () => {
+    it.each(getURLCases)("getURLsFromHTML $name", ({ inputBody, inputURL, expected }) => {
+        expect(getURLsFromHTML(inputBody, inputURL)).toEqual(expected)
+    })
+})
+
+const getURLInvalidCases = [
+    {
+        name: "ignores missing href",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a>no href</a><a href="/ok">ok</a></body></html>',
+        expected: ["https://blog.boot.dev/ok"],
+    },
+    {
+        name: "ignores empty href",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="">empty</a><a href="/ok">ok</a></body></html>',
+        expected: ["https://blog.boot.dev/ok"],
+    },
+    {
+        name: "ignores javascript href",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="javascript:alert(1)">bad</a><a href="/ok">ok</a></body></html>',
+        expected: ["https://blog.boot.dev/ok"],
+    },
+    {
+        name: "ignores malformed URL",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="ht!tp://bad^url">bad</a><a href="/ok">ok</a></body></html>',
+        expected: ["https://blog.boot.dev/ok"],
+    },
+] as const
+
+describe("getURLsFromHTML invalid/missing href", () => {
+    it.each(getURLInvalidCases)("getURLsFromHTML $name", ({ inputBody, inputURL, expected }) => {
+        expect(getURLsFromHTML(inputBody, inputURL)).toEqual(expected)
+    })
+})
+
+const getURLDupCases = [
+    {
+        name: "keeps duplicates (un-normalized list)",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="/a">A</a><a href="/a">A2</a></body></html>',
+        expected: ["https://blog.boot.dev/a", "https://blog.boot.dev/a"],
+    },
+    {
+        name: "preserves document order",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="/a">A</a><a href="/b">B</a><a href="/c">C</a></body></html>',
+        expected: [
+            "https://blog.boot.dev/a",
+            "https://blog.boot.dev/b",
+            "https://blog.boot.dev/c",
+        ],
+    },
+] as const
+
+describe("getURLsFromHTML duplicates/order", () => {
+    it.each(getURLDupCases)("getURLsFromHTML $name", ({ inputBody, inputURL, expected }) => {
+        expect(getURLsFromHTML(inputBody, inputURL)).toEqual(expected)
+    })
+})
+
+const getURLRelativeCases = [
+    {
+        name: "dot-segment ./ resolves",
+        inputURL: "https://blog.boot.dev/base/",
+        inputBody:
+            '<html><body><a href="./a">A</a></body></html>',
+        expected: ["https://blog.boot.dev/base/a"],
+    },
+    {
+        name: "dot-segment ../ resolves",
+        inputURL: "https://blog.boot.dev/base/sub/",
+        inputBody:
+            '<html><body><a href="../a">A</a></body></html>',
+        expected: ["https://blog.boot.dev/base/a"],
+    },
+    {
+        name: "root-relative",
+        inputURL: "https://blog.boot.dev/base/sub/",
+        inputBody:
+            '<html><body><a href="/root">R</a></body></html>',
+        expected: ["https://blog.boot.dev/root"],
+    },
+    {
+        name: "protocol-relative //",
+        inputURL: "https://blog.boot.dev",
+        inputBody:
+            '<html><body><a href="//cdn.boot.dev/asset">CDN</a></body></html>',
+        expected: ["https://cdn.boot.dev/asset"],
+    },
+] as const
+
+describe("getURLsFromHTML relative resolution", () => {
+    it.each(getURLRelativeCases)("getURLsFromHTML $name", ({ inputBody, inputURL, expected }) => {
+        expect(getURLsFromHTML(inputBody, inputURL)).toEqual(expected)
+    })
+})

@@ -6,3 +6,7 @@ export function normalizeURL(url: string): string {
     const path = u.pathname.endsWith("/") ? u.pathname.slice(0, -1) : u.pathname;
     return `${host}${path}`;
 }
+
+export function getURLsFromHTML(html: string, baseURL: string): string[] {
+    return []
+}
