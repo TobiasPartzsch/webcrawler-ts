@@ -2,10 +2,12 @@
   "name": "webcrawler-ts",
   "version": "1.0.0",
   "description": "bootdev guided project webcrawler in TS with node.js",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "tsx ./src/index.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -18,10 +20,15 @@
   },
   "homepage": "https://github.com/TobiasPartzsch/webcrawler-ts#readme",
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^9.34.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0",
     "vitest": "^3.2.4"
   },
   "dependencies": {
