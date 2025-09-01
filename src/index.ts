@@ -1,4 +1,5 @@
 import { crawlSiteAsync } from "./crawl";
+import { printReport } from "./report";
 
 
 async function main() {
@@ -10,6 +11,8 @@ async function main() {
     const baseURL = args[0].trim();
     console.log(`Starting crawler at base URL: "${baseURL}"`);
     const pages = await crawlSiteAsync(baseURL);
+
+    printReport(pages, baseURL);
 
     process.exit(0);
 }
