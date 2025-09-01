@@ -1,0 +1,25 @@
+{
+  "name": "webcrawler-ts",
+  "version": "1.0.0",
+  "description": "bootdev guided project webcrawler in TS with node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsx ./src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TobiasPartzsch/webcrawler-ts.git"
+  },
+  "author": "TobiasPartzsch",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TobiasPartzsch/webcrawler-ts/issues"
+  },
+  "homepage": "https://github.com/TobiasPartzsch/webcrawler-ts#readme",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
